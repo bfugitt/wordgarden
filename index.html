@@ -15,6 +15,10 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Load the external banned words list -->
+    <!-- If this file is missing, the app will still work, just without the extended filter -->
+    <script src="banned_words.js"></script>
+
     <!-- Google Fonts: Noto Serif (Classic) and Lato (Clean) for Reggio feel -->
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
@@ -93,11 +97,12 @@
                 "canopy", "blossom", "explore", "quiet", "listen"
             ],
 
-            // SAFETY FILTER: Add words here that you want to block.
-            bannedWords: [
+            // INTERNAL BASIC SAFETY FILTER
+            // This is a small backup list. 
+            // The MAIN list should go in "banned_words.js"
+            basicBannedWords: [
                 "stupid", "idiot", "dumb", "hate", "kill", "death", 
-                "violence", "weapon", "sex", "nude", "naked",
-                // Add other words here inside quotes, separated by commas
+                "violence", "weapon", "sex", "nude", "naked"
             ],
 
             // Gamification: Badges for collecting words
@@ -170,6 +175,13 @@
 
             // --- Functions ---
 
+            // Helper to get ALL banned words (internal + external)
+            const getAllBannedWords = () => {
+                const externalList = window.BANNED_WORD_LIST || [];
+                const internalList = TEACHER_SETTINGS.basicBannedWords || [];
+                return [...internalList, ...externalList];
+            };
+
             // Helper to extract synonyms and antonyms from API data
             const extractRelatedWords = (data) => {
                 let syns = new Set();
@@ -222,7 +234,8 @@
 
                 // SAFETY CHECK: Profanity Filter
                 const cleanSearch = wordToSearch.trim().toLowerCase();
-                const isBanned = TEACHER_SETTINGS.bannedWords.some(badWord => cleanSearch.includes(badWord));
+                const bannedList = getAllBannedWords();
+                const isBanned = bannedList.some(badWord => cleanSearch.includes(badWord.toLowerCase()));
 
                 if (isBanned) {
                     setError("That word doesn't seem to fit in our garden. Let's try a different one.");
